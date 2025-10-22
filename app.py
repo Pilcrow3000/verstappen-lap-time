@@ -2,199 +2,187 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-import pickle
-from PIL import Image
+import base64
 
-# ==============================================
-# PAGE CONFIGURATION
-# ==============================================
-st.set_page_config(
-    page_title="🏎️ Verstappen Lap Time Predictor",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+# --------------------------
+# 🎨 PAGE CONFIGURATION
+# --------------------------
+st.set_page_config(page_title="F1 Lap Time Predictor", page_icon="🏎️", layout="centered")
 
-# ==============================================
-# LOAD ARTIFACTS
-# ==============================================
-@st.cache_resource
-def load_artifacts():
-    model = joblib.load("models/model.pkl")
-    scaler = joblib.load("models/scaler.pkl")
-    imputer = joblib.load("models/imputer.pkl")
-    with open("models/model_columns.pkl", "rb") as f:
-        model_columns = pickle.load(f)
-    return model, scaler, imputer, model_columns
+# --------------------------
+# 🏎️ LOAD LOCAL LOGO
+# --------------------------
+# Make sure your logo is saved as: deploy/f1_logo.png
+with open("deploy/f1_logo.png", "rb") as f:
+    f1_logo_base64 = base64.b64encode(f.read()).decode()
 
-model, scaler, imputer, model_columns = load_artifacts()
-
-# ==============================================
-# STYLING
-# ==============================================
-st.markdown("""
+# --------------------------
+# 💅 CUSTOM DARK THEME STYLING
+# --------------------------
+st.markdown(f"""
     <style>
-    .stApp {
-        background-color: #0d1117;
-        color: #f0f6fc;
-    }
-    .main-title {
-        font-size: 32px;
-        font-weight: 800;
-        color: #ff1801;
-        text-align: left;
-        padding-bottom: 0.3rem;
-        margin-bottom: 0.5rem;
-        border-bottom: 2px solid #ff1801;
-    }
-    .subheader {
-        font-size: 16px;
-        color: #c9d1d9;
-        margin-top: -6px;
-        margin-bottom: 1rem;
-    }
-    .css-18e3th9 {
-        padding-top: 4rem !important;
-    }
-    .metric-card {
-        background: #161b22;
-        padding: 1rem;
-        border-radius: 12px;
-        box-shadow: 0px 4px 8px rgba(255,255,255,0.05);
-        text-align: center;
-    }
-    .metric-card h3 {
-        color: #ff1801;
-        margin-bottom: 0.2rem;
-    }
-    .sidebar .sidebar-content {
-        background-color: #161b22;
-    }
-    .stButton>button {
-        background-color: #ff1801;
-        color: white;
-        font-weight: bold;
-        border-radius: 8px;
-        border: none;
-        transition: 0.3s;
-    }
-    .stButton>button:hover {
-        background-color: #ff3c00;
-        transform: scale(1.03);
-    }
+        body {{
+            background-color: #0d0d0d;
+            color: #f2f2f2;
+            font-family: 'Inter', sans-serif;
+        }}
+        .navbar {{
+            background-color: #1a1a1a;
+            padding: 1rem 2rem 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            border-bottom: 1px solid #333;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }}
+        .navbar img {{
+            height: 42px;
+            margin-right: 14px;
+        }}
+        .title-text {{
+            font-size: 1.7rem;
+            font-weight: 600;
+            color: #f1f1f1;
+            letter-spacing: 0.5px;
+        }}
+        .stButton>button {{
+            background: linear-gradient(90deg, #e10600, #ff1e00);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.7rem 1.4rem;
+            font-weight: 600;
+            transition: 0.2s ease-in-out;
+        }}
+        .stButton>button:hover {{
+            background: linear-gradient(90deg, #ff2a00, #ff4b00);
+            transform: translateY(-2px);
+        }}
     </style>
+
+    <div class="navbar">
+        <img src="data:image/png;base64,{f1_logo_base64}" alt="F1 Logo">
+        <span class="title-text">F1 2023 Lap Time Predictor</span>
+    </div>
 """, unsafe_allow_html=True)
 
-# ==============================================
-# HEADER
-# ==============================================
-col1, col2 = st.columns([0.08, 0.92])
+# --------------------------
+# 📦 LOAD MODEL ARTIFACTS
+# --------------------------
+model = joblib.load("deploy/model.pkl")
+scaler = joblib.load("deploy/scaler.pkl")
+imputer = joblib.load("deploy/imputer.pkl")
+model_columns = joblib.load("deploy/model_columns.pkl")
+
+st.write("### Predict Verstappen’s lap time based on circuit, tyre, stint, and speed data")
+
+# --------------------------
+# 🏁 USER INPUTS
+# --------------------------
+circuits = ['Italian Grand Prix', 'Azerbaijan Grand Prix', 'British Grand Prix', 'Belgian Grand Prix']
+compounds = ['SOFT', 'MEDIUM', 'HARD']
+stints = [1, 2, 3, 4, 5]
+
+col1, col2 = st.columns(2)
 with col1:
-    st.image("https://upload.wikimedia.org/wikipedia/en/3/33/F1.svg", width=80)
+    circuit = st.selectbox("🏟️ Circuit", circuits)
+    compound = st.selectbox("🛞 Tyre Compound", compounds)
+    stint = st.selectbox("🔁 Stint Number", stints)
+    tyre_life = st.slider("Tyre Age (laps)", 0, 35, 5)
 with col2:
-    st.markdown("<div class='main-title'>Verstappen Lap Time Predictor (2023)</div>", unsafe_allow_html=True)
-    st.markdown("<div class='subheader'>Predict lap time based on tyre, stint, circuit, and speed data</div>", unsafe_allow_html=True)
+    lap_number = st.slider("Lap Number", 1, 55, 10)
+    speed_i1 = st.slider("Speed at Sector 1 (km/h)", 150, 350, 250)
+    speed_i2 = st.slider("Speed at Sector 2 (km/h)", 150, 350, 250)
+    speed_fl = st.slider("Finish Line Speed (km/h)", 150, 350, 250)
 
-# ==============================================
-# SIDEBAR INPUTS
-# ==============================================
-st.sidebar.header("🏁 Circuit Selection")
-
-circuit_length_map = {
-    "Italian Grand Prix": 5793,
-    "Azerbaijan Grand Prix": 6003,
-    "British Grand Prix": 5891,
-    "Belgian Grand Prix": 7004,
+# --------------------------
+# 🧮 BUILD INPUT
+# --------------------------
+track_attributes = {
+    'Italian Grand Prix':   {'Length': 5.79, 'Corners': 11, 'Elevation': 2,  'SpeedProfile': 1.10},
+    'Azerbaijan Grand Prix':{'Length': 6.00, 'Corners': 20, 'Elevation': 4,  'SpeedProfile': 0.90},
+    'British Grand Prix':   {'Length': 5.89, 'Corners': 18, 'Elevation': 11, 'SpeedProfile': 1.00},
+    'Belgian Grand Prix':   {'Length': 7.00, 'Corners': 19, 'Elevation': 40, 'SpeedProfile': 0.95},
 }
 
-circuit = st.sidebar.selectbox("Select Circuit", list(circuit_length_map.keys()))
-circuit_length = circuit_length_map[circuit]
+track = track_attributes[circuit]
+lap_progress = lap_number / 55
+stint_lap = lap_number % 15 if lap_number > 15 else lap_number
+stint_progress = stint_lap / 15
+stint_phase = "Early" if stint_progress <= 0.33 else ("Mid" if stint_progress <= 0.66 else "Late")
 
-st.sidebar.header("⚙️ Lap Setup")
-compound = st.sidebar.selectbox("Tyre Compound", ["SOFT", "MEDIUM", "HARD"])
-tyre_life = st.sidebar.slider("Tyre Life (laps)", 0, 60, 10)
-stint = st.sidebar.selectbox("Stint Number", [1, 2, 3, 4])
-lap_number = st.sidebar.slider("Lap Number", 1, 60, 10)
+tyre_wear_factor = np.log1p(tyre_life)
+avg_speed = np.mean([speed_i1, speed_i2, speed_fl])
+speed_std = np.std([speed_i1, speed_i2, speed_fl])
+relative_speed = avg_speed / track["Length"]
+compound_factor = {"SOFT": 0.98, "MEDIUM": 1.00, "HARD": 1.03}[compound]
+laps_since_pit = min(tyre_life + 1, 20)
+relative_pit_progress = laps_since_pit / 20
 
-st.sidebar.header("💨 Speed Inputs")
-speed_i1 = st.sidebar.slider("Speed at I1 (km/h)", 250, 340, 300, step=1)
-speed_i2 = st.sidebar.slider("Speed at I2 (km/h)", 250, 340, 310, step=1)
-speed_fl = st.sidebar.slider("Speed at Finish Line (km/h)", 250, 340, 320, step=1)
-
-# ==============================================
-# FEATURE PREPARATION
-# ==============================================
-lap_progress = lap_number / 60
-stint_lap = lap_number if stint == 1 else lap_number % 20
-stint_progress = stint_lap / 20
-tyre_phase = "Fresh" if tyre_life <= 5 else "Mid" if tyre_life <= 15 else "Worn" if tyre_life <= 30 else "VeryWorn"
-
-input_data = {
-    "LapNumber": lap_number,
-    "TyreLife": tyre_life,
-    "Stint": stint,
-    "SpeedI1": speed_i1,
-    "SpeedI2": speed_i2,
-    "SpeedFL": speed_fl,
-    "LapProgress": lap_progress,
-    "StintLap": stint_lap,
-    "StintProgress": stint_progress,
-    "CircuitLength": circuit_length,
-    "Circuit_" + circuit: 1,
-    "Compound_" + compound: 1,
-    "TyrePhase_" + tyre_phase: 1,
+# Construct DataFrame
+input_dict = {
+    'CircuitLength': track["Length"],
+    'CornerDensity': track["Corners"] / track["Length"],
+    'ElevationFactor': track["Elevation"] / track["Length"],
+    'SpeedProfile': track["SpeedProfile"],
+    'LapNumber': lap_number,
+    'LapProgress': lap_progress,
+    'Stint': stint,
+    'StintLap': stint_lap,
+    'StintProgress': stint_progress,
+    'TyreLife': tyre_life,
+    'TyreWearFactor': tyre_wear_factor,
+    'CompoundFactor': compound_factor,
+    'SpeedI1': speed_i1,
+    'SpeedI2': speed_i2,
+    'SpeedFL': speed_fl,
+    'AvgSpeed': avg_speed,
+    'SpeedStd': speed_std,
+    'RelativeSpeed': relative_speed,
+    'LapsSincePit': laps_since_pit,
+    'RelativePitProgress': relative_pit_progress,
 }
 
-# ==============================================
-# BUILD INPUT FRAME TO MATCH TRAINING COLUMNS
-# ==============================================
-df_input = pd.DataFrame(columns=model_columns)
-df_input.loc[0] = 0  # create empty row
+for phase in ['Early', 'Mid', 'Late']:
+    input_dict[f'StintPhase_{phase}'] = 1 if stint_phase == phase else 0
+for phase in ['Fresh', 'Mid', 'Worn', 'VeryWorn']:
+    input_dict[f'TyrePhase_{phase}'] = 1 if (
+        (phase == 'Fresh' and tyre_life <= 5) or
+        (phase == 'Mid' and 5 < tyre_life <= 15) or
+        (phase == 'Worn' and 15 < tyre_life <= 30) or
+        (phase == 'VeryWorn' and tyre_life > 30)
+    ) else 0
+for c in circuits[1:]:
+    input_dict[f'Circuit_{c}'] = 1 if circuit == c else 0
+for comp in compounds[1:]:
+    input_dict[f'Compound_{comp}'] = 1 if compound == comp else 0
 
-for k, v in input_data.items():
-    if k in df_input.columns:
-        df_input.at[0, k] = v
+df_input = pd.DataFrame([input_dict])
+df_input = df_input.reindex(columns=model_columns, fill_value=0)
 
-# Ensure exact same column order as model_columns
-df_input = df_input[model_columns]
+# Impute and scale
+df_imputed = pd.DataFrame(imputer.transform(df_input), columns=model_columns)
+df_scaled = pd.DataFrame(scaler.transform(df_imputed), columns=model_columns)
 
-# ==============================================
-# PREDICTION
-# ==============================================
-if st.button("🔮 Predict Lap Time"):
-    try:
-        # Match imputer’s expected input shape
-        X_input = df_input.reindex(columns=model_columns, fill_value=0)
+# --------------------------
+# 🚀 PREDICTION
+# --------------------------
+if st.button("🏁 Predict Lap Time"):
+    pred_time = model.predict(df_scaled)[0]
+    mins, secs = divmod(pred_time, 60)
+    st.markdown(f"### 🕒 Predicted Lap Time: **{int(mins)}m {secs:.3f}s**")
+    st.caption(f"Based on {circuit}, {compound} tyres, stint {stint}, avg speed {avg_speed:.1f} km/h.")
 
-        df_imputed = pd.DataFrame(imputer.transform(X_input), columns=model_columns)
-        df_scaled = pd.DataFrame(scaler.transform(df_imputed), columns=model_columns)
-
-        prediction = model.predict(df_scaled)[0]
-        pred_min, pred_sec = divmod(prediction, 60)
-
-        st.markdown("## 🏎️ Predicted Lap Time")
-        c1, c2 = st.columns([0.4, 0.6])
-        with c1:
-            st.markdown(f"""
-            <div class='metric-card'>
-                <h3>{pred_min:.0f} min {pred_sec:.3f} s</h3>
-                <p>Predicted lap time</p>
-            </div>
-            """, unsafe_allow_html=True)
-        with c2:
-            st.markdown(f"""
-            <div class='metric-card'>
-                <h3>{circuit}</h3>
-                <p>Circuit Length: <b>{circuit_length:,} m</b></p>
-            </div>
-            """, unsafe_allow_html=True)
-    except Exception as e:
-        st.error(f"Prediction failed. Error: {e}")
-
-# ==============================================
-# FOOTER
-# ==============================================
-st.markdown("<br><hr>", unsafe_allow_html=True)
-st.markdown(
-    "<p style='text-align:center;color:#8b949e;'>Built by the <b>Media Intelligence Team</b> | Powered by Streamlit & Scikit-Learn</p>",
-    unsafe_allow_html=True
-)
+# --------------------------
+# 📊 FOOTER
+# --------------------------
+st.markdown("""
+<hr style='border: 0.5px solid #333; margin-top: 2rem;'>
+<div style='text-align: center; color: #777; font-size: 0.9rem;'>
+Developed by <b>Media Intelligence Team</b> | Data: FastF1, FIA Circuits 2023
+</div>
+""", unsafe_allow_html=True)
