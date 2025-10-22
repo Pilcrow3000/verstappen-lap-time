@@ -10,6 +10,56 @@ st.set_page_config(
     layout="wide"
 )
 
+# -------------------- Navigation Bar with F1 Logo --------------------
+st.markdown(
+    """
+    <style>
+    .navbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #0e0e0e;
+        padding: 0.6rem 2rem;
+        border-bottom: 1px solid #d90429;
+        position: sticky;
+        top: 0;
+        z-index: 999;
+    }
+    .navbar img {
+        height: 40px;
+    }
+    .navbar-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #f5f5f5;
+        margin-left: 10px;
+        letter-spacing: 0.5px;
+    }
+    .navbar-sub {
+        font-size: 0.9rem;
+        color: #aaa;
+        margin-left: 10px;
+    }
+    .nav-container {
+        display: flex;
+        align-items: center;
+    }
+    </style>
+
+    <div class="navbar">
+        <div class="nav-container">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/33/F1.svg">
+            <div>
+                <div class="navbar-title">Lap Time Predictor</div>
+                <div class="navbar-sub">Max Verstappen • 2023 Data • Machine Learning</div>
+            </div>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
 # -------------------- Custom Styling --------------------
 st.markdown("""
     <style>
@@ -59,13 +109,22 @@ model = joblib.load("model.pkl")
 scaler = joblib.load("scaler.pkl")
 imputer = joblib.load("imputer.pkl")
 
+# Try loading feature names from scaler (or use manual fallback)
+expected_features = getattr(scaler, "feature_names_in_", None)
+if expected_features is None:
+    # Manual fallback if feature names not saved
+    try:
+        expected_features = joblib.load("feature_names.pkl")
+    except:
+        expected_features = None
+
 # -------------------- Header --------------------
 col1, col2 = st.columns([1, 4])
 with col1:
     st.image("https://upload.wikimedia.org/wikipedia/en/3/33/F1.svg", width=90)
 with col2:
     st.title("F1 Lap Time Predictor")
-    st.caption("Max Verstappen | 2023 Data | Powered by Machine Learning")
+    st.caption("Max Verstappen | 2023 Data | Machine Learning Regression")
 
 st.markdown("---")
 
@@ -117,10 +176,23 @@ for phase in ["Fresh", "Mid", "Worn", "VeryWorn"]:
     input_dict[f"TyrePhase_{phase}"] = [1 if tyre_phase == phase else 0]
 
 df_input = pd.DataFrame(input_dict)
+
+# -------------------- Align Columns --------------------
+if expected_features is not None:
+    # Add missing columns as 0
+    for col in expected_features:
+        if col not in df_input.columns:
+            df_input[col] = 0
+    # Reorder to match training
+    df_input = df_input.reindex(columns=expected_features)
+else:
+    st.warning("⚠️ Warning: Feature names not found. Using current input columns order.")
+
+# -------------------- Apply Imputer & Scaler --------------------
 df_imputed = pd.DataFrame(imputer.transform(df_input), columns=df_input.columns)
 df_scaled = pd.DataFrame(scaler.transform(df_imputed), columns=df_input.columns)
 
-# -------------------- Prediction Section --------------------
+# -------------------- Layout: Inputs + Prediction --------------------
 col_left, col_right = st.columns([2, 1])
 
 with col_left:
@@ -142,10 +214,12 @@ with col_right:
         st.markdown("---")
         st.caption("Prediction based on 2023 race data and trained regression model.")
 
-# Optional Example Preset
+# -------------------- Example Preset --------------------
 with st.expander("💡 Try Example Lap"):
     st.markdown("""
-    **Example:** Baku, Soft tyres, 8-lap-old, average sector speeds  
-    → Expected Lap Time ≈ 96–98 seconds.
+    **Example:**  
+    - Circuit: Baku (Azerbaijan Grand Prix)  
+    - Tyre: SOFT, Tyre Life = 8 laps  
+    - Speeds ~305 / 310 / 320 km/h  
+    → Expected Lap Time ≈ 96–98 seconds
     """)
-
