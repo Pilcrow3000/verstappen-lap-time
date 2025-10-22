@@ -116,9 +116,9 @@ stint = st.sidebar.selectbox("Stint Number", [1, 2, 3, 4])
 lap_number = st.sidebar.slider("Lap Number", 1, 60, 10)
 
 st.sidebar.header("💨 Speed Inputs")
-speed_i1 = st.sidebar.slider("Speed at I1 (km/h)", 200, 340, 300)
-speed_i2 = st.sidebar.slider("Speed at I2 (km/h)", 200, 340, 310)
-speed_fl = st.sidebar.slider("Speed at Finish Line (km/h)", 200, 340, 320)
+speed_i1 = st.sidebar.slider("Speed at I1 (km/h)", 250, 340, 300, step=1)
+speed_i2 = st.sidebar.slider("Speed at I2 (km/h)", 250, 340, 310, step=1)
+speed_fl = st.sidebar.slider("Speed at Finish Line (km/h)", 250, 340, 320, step=1)
 
 # ==============================================
 # FEATURE PREPARATION
