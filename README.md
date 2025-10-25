@@ -6,6 +6,12 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-FF4B4B.svg)](https://streamlit.io/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+## 🌐 Live Dashboard
+
+**Try it now:** [https://verstappen.streamlit.app/](https://verstappen.streamlit.app/)
+
+Interactive dashboard with multi-year analysis, predictions, and model insights.
+
 ## 📊 Results
 
 | Year | Model | Test R² | MAE |
