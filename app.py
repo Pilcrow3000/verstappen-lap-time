@@ -109,6 +109,22 @@ st.markdown("""
         margin: 10px 0;
     }
     
+    .stButton>button {
+        background-color: #1E1E2E;
+        color: #FFFFFF;
+        border: 1px solid rgba(94, 82, 64, 0.3);
+        margin-bottom: 8px;
+        text-align: left;
+        padding-left: 16px;
+    }
+    
+    .stButton>button:hover {
+        background-color: #E10600;
+        border-color: #E10600;
+        color: #FFFFFF;
+    }
+
+    
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     </style>
@@ -126,13 +142,20 @@ st.sidebar.metric("Total Laps", "189")
 st.sidebar.metric("Avg R²", "0.8851")
 st.sidebar.markdown("---")
 
-# Navigation
-page = st.sidebar.radio(
-    "Navigate to:",
-    ["🏠 Home", "📊 Multi-Year Analysis", "🔍 Year Deep Dive", "⚙️ Methodology", "👤 About"],
-    label_visibility="visible"
-)
+# Navigation with buttons
+st.sidebar.markdown("### Navigation")
 
+if 'page' not in st.session_state:
+    st.session_state.page = "🏠 Home"
+
+pages = ["🏠 Home", "📊 Multi-Year Analysis", "🔍 Year Deep Dive", "🔮 Live Prediction", "⚙️ Methodology", "👤 About"]
+
+for page_name in pages:
+    if st.sidebar.button(page_name, use_container_width=True, key=page_name):
+        st.session_state.page = page_name
+        st.rerun()
+
+page = st.session_state.page
 
 # ============================================================================
 # PAGE: HOME
@@ -319,9 +342,12 @@ elif page == "📊 Multi-Year Analysis":
             st.markdown("### Model Selection Pattern")
             
             # Model frequency
+            # Model frequency - normalize names (remove "Tuned" suffix)
             model_counts = {}
             for model in cross_data['model_names']:
-                model_counts[model] = model_counts.get(model, 0) + 1
+                clean_name = model.replace(' (Tuned)', '').strip()
+                model_counts[clean_name] = model_counts.get(clean_name, 0) + 1
+
             
             fig4 = go.Figure(data=[
                 go.Pie(
@@ -533,6 +559,264 @@ elif page == "🔍 Year Deep Dive":
     except Exception as e:
         st.error(f"Error loading {selected_year} data: {e}")
         st.info(f"Make sure `results/{selected_year}/` contains predictions.json and feature_importance.json")
+
+# ============================================================================
+# PAGE: LIVE PREDICTION
+# ============================================================================
+elif page == "🔮 Live Prediction":
+    st.title("🔮 Live Prediction Engine")
+    st.markdown("Test the model by entering custom feature values")
+    st.markdown('<div class="racing-stripe"></div>', unsafe_allow_html=True)
+    
+    # Check for preset selection
+    preset_values = {}
+    if 'preset' in st.session_state:
+        if st.session_state.preset == "start":
+            preset_values = {
+                'lap': 1, 'tire_age': 0, 'stint': 1, 
+                'fuel': 110.0, 'compound': 0
+            }
+        elif st.session_state.preset == "mid":
+            preset_values = {
+                'lap': 25, 'tire_age': 10, 'stint': 1,
+                'fuel': 70.0, 'compound': 0
+            }
+        elif st.session_state.preset == "end":
+            preset_values = {
+                'lap': 53, 'tire_age': 35, 'stint': 2,
+                'fuel': 15.0, 'compound': 1
+            }
+        del st.session_state.preset
+    
+    # Year selector
+    selected_year = st.radio(
+        "Select Model Year",
+        [2022, 2023, 2024, 2025],
+        horizontal=True
+    )
+    
+    try:
+        # Load the trained model
+        import joblib
+        model_data = joblib.load(f'./models/model_{selected_year}.pkl')
+        model = model_data['model']
+        model_name = model_data.get('model_name', model_data.get('name', 'Unknown'))
+        
+        st.success(f"✅ Model {selected_year} loaded successfully! ({model_name})")
+        
+        # Load summary to show model info
+        summary_df = pd.read_csv('./data/summary_results.csv')
+        year_info = summary_df[summary_df['year'] == selected_year].iloc[0]
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Model", year_info['model_name'])
+        with col2:
+            st.metric("Training R²", f"{year_info['test_r2']:.4f}")
+        with col3:
+            st.metric("Expected Error", f"±{year_info['mae']:.3f}s")
+        
+        st.markdown("---")
+        st.markdown("## 🎛️ Input Features")
+        
+        # Create two columns for inputs
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("### Practice Session Features")
+            
+            fp3_baseline = st.number_input(
+                "FP3 Baseline (seconds)",
+                min_value=75.0,
+                max_value=85.0,
+                value=79.5,
+                step=0.1,
+                help="Fastest lap time from FP3 practice session"
+            )
+            
+            medium_deg = st.number_input(
+                "Medium Tire Degradation (s/lap)",
+                min_value=-5.0,
+                max_value=1.0,
+                value=-0.5,
+                step=0.1,
+                help="Tire wear rate for MEDIUM compound from FP2"
+            )
+            
+            hard_deg = st.number_input(
+                "Hard Tire Degradation (s/lap)",
+                min_value=-1.0,
+                max_value=2.0,
+                value=0.06,
+                step=0.01,
+                help="Tire wear rate for HARD compound from FP2"
+            )
+            
+            track_temp = st.slider(
+                "Race Track Temperature (°C)",
+                min_value=20.0,
+                max_value=60.0,
+                value=43.0,
+                step=0.5
+            )
+            
+            air_temp = st.slider(
+                "Race Air Temperature (°C)",
+                min_value=15.0,
+                max_value=40.0,
+                value=26.0,
+                step=0.5
+            )
+        
+        with col2:
+            st.markdown("### Lap Context Features")
+            
+            lap_number = st.number_input(
+                "Lap Number",
+                min_value=1,
+                max_value=53,
+                value=preset_values.get('lap', 25),
+                step=1,
+                help="Which lap in the race (1-53)"
+            )
+            
+            tire_age = st.number_input(
+                "Tire Age (laps)",
+                min_value=0,
+                max_value=40,
+                value=preset_values.get('tire_age', 10),
+                step=1,
+                help="How many laps on current tire set"
+            )
+            
+            stint_number = st.selectbox(
+                "Stint Number",
+                [1, 2, 3],
+                index=preset_values.get('stint', 1) - 1,
+                help="Which tire stint (usually 1-3)"
+            )
+            
+            fuel_remaining = st.slider(
+                "Fuel Remaining (kg)",
+                min_value=0.0,
+                max_value=110.0,
+                value=preset_values.get('fuel', 70.0),
+                step=1.0,
+                help="Estimated fuel load"
+            )
+            
+            compound = st.selectbox(
+                "Tire Compound",
+                ["MEDIUM", "HARD"],
+                index=preset_values.get('compound', 0),
+                help="Current tire compound"
+            )
+        
+        st.markdown("---")
+        
+        # Add preset buttons BEFORE predict button
+        st.markdown("### 📝 Quick Presets")
+        st.caption("Click to populate lap context fields with typical scenarios")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("🏁 Race Start (Lap 1)", use_container_width=True):
+                st.session_state.preset = "start"
+                st.rerun()
+        
+        with col2:
+            if st.button("⏱️ Mid-Race (Lap 25)", use_container_width=True):
+                st.session_state.preset = "mid"
+                st.rerun()
+        
+        with col3:
+            if st.button("🏆 Final Lap (Lap 53)", use_container_width=True):
+                st.session_state.preset = "end"
+                st.rerun()
+        
+        st.markdown("---")
+        
+        # Predict button
+        if st.button("🏎️ PREDICT LAP TIME", use_container_width=True):
+            # Prepare input data
+            lap_progress = lap_number / 53.0
+            tire_age_squared = tire_age ** 2
+            compound_encoded = 0 if compound == "MEDIUM" else 1
+            
+            input_features = [[
+                fp3_baseline,
+                medium_deg,
+                hard_deg,
+                track_temp,
+                air_temp,
+                lap_number,
+                tire_age,
+                tire_age_squared,
+                stint_number,
+                fuel_remaining,
+                lap_progress,
+                compound_encoded
+            ]]
+            
+            # Make prediction
+            prediction = model.predict(input_features)[0]
+            
+            # Display result
+            st.markdown('<div class="racing-stripe"></div>', unsafe_allow_html=True)
+            
+            col1, col2, col3 = st.columns([1, 2, 1])
+            
+            with col2:
+                st.markdown("### 🏁 Predicted Lap Time")
+                st.markdown(f"<h1 style='text-align: center; color: #E10600;'>{prediction:.3f}s</h1>", 
+                           unsafe_allow_html=True)
+                
+                diff = prediction - fp3_baseline
+                diff_text = f"+{diff:.3f}s" if diff > 0 else f"{diff:.3f}s"
+                st.markdown(f"<p style='text-align: center; font-size: 1.2rem;'>Difference from FP3: {diff_text}</p>", 
+                           unsafe_allow_html=True)
+            
+            st.markdown('<div class="racing-stripe"></div>', unsafe_allow_html=True)
+            
+            # Show feature interpretation
+            st.markdown("### 📊 Prediction Breakdown")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown(f"""
+                <div class="stat-card">
+                <h4>Input Summary</h4>
+                <ul>
+                    <li><strong>Base Pace:</strong> {fp3_baseline:.3f}s (FP3)</li>
+                    <li><strong>Tire Condition:</strong> {tire_age} laps old</li>
+                    <li><strong>Fuel Load:</strong> {fuel_remaining:.1f}kg</li>
+                    <li><strong>Track Temp:</strong> {track_temp:.1f}°C</li>
+                </ul>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown("""
+                <div class="stat-card">
+                <h4>Factors Affecting Time</h4>
+                <ul>
+                    <li><strong>Fuel:</strong> Lighter = Faster</li>
+                    <li><strong>Tires:</strong> Older = Slower</li>
+                    <li><strong>Temperature:</strong> Affects grip</li>
+                    <li><strong>Lap Position:</strong> Race pace vs sprint</li>
+                </ul>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    except FileNotFoundError:
+        st.error(f"❌ Model for {selected_year} not found!")
+        st.info("Make sure model files are in the `models/` folder")
+    
+    except Exception as e:
+        st.error(f"❌ Error loading model: {e}")
+        st.info("Check that the model file is valid and all features are provided")
 
 # ============================================================================
 # PAGE: METHODOLOGY
