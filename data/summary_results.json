@@ -1,0 +1,62 @@
+[
+  {
+    "year": 2022,
+    "model_name": "CatBoost",
+    "test_r2": 0.8518791451825427,
+    "train_r2": 0.9723731126681561,
+    "mae": 0.12628249119029972,
+    "rmse": 0.15455583003111387,
+    "overfit_gap": 0.12049396748561336,
+    "dataset_size": 43,
+    "fp3_baseline": 81.252,
+    "medium_deg_rate": -3.2589280719280693,
+    "hard_deg_rate": 0.06,
+    "track_temp": 43.138775510204084,
+    "air_temp": 27.73469387755102
+  },
+  {
+    "year": 2023,
+    "model_name": "XGBoost (Tuned)",
+    "test_r2": 0.7854038464231756,
+    "train_r2": 0.9992875175929778,
+    "mae": 0.17079923095703292,
+    "rmse": 0.2275043783675568,
+    "overfit_gap": 0.21388367116980223,
+    "dataset_size": 48,
+    "fp3_baseline": 80.998,
+    "medium_deg_rate": -0.353294491525423,
+    "hard_deg_rate": 0.06,
+    "track_temp": 42.928205128205136,
+    "air_temp": 29.330128205128204
+  },
+  {
+    "year": 2024,
+    "model_name": "CatBoost (Tuned)",
+    "test_r2": 0.923043425958214,
+    "train_r2": 0.9982121598359959,
+    "mae": 0.1986581345704792,
+    "rmse": 0.30309697617168735,
+    "overfit_gap": 0.07516873387778189,
+    "dataset_size": 48,
+    "fp3_baseline": 80.368,
+    "medium_deg_rate": -1.2586038961038966,
+    "hard_deg_rate": 0.06,
+    "track_temp": 49.31127819548872,
+    "air_temp": 33.1015037593985
+  },
+  {
+    "year": 2025,
+    "model_name": "RandomForest (Tuned)",
+    "test_r2": 0.9799556147242944,
+    "train_r2": 0.9165231763479413,
+    "mae": 0.08630360532801547,
+    "rmse": 0.11929804098999619,
+    "overfit_gap": -0.06343243837635304,
+    "dataset_size": 50,
+    "fp3_baseline": 79.498,
+    "medium_deg_rate": -2.065426470588235,
+    "hard_deg_rate": 0.06,
+    "track_temp": 43.28819444444444,
+    "air_temp": 26.76111111111111
+  }
+]

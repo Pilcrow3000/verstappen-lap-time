@@ -1,0 +1,18 @@
+{
+  "year": 2024,
+  "final_model": "CatBoost (Tuned)",
+  "test_r2": 0.923043425958214,
+  "train_r2": 0.9982121598359959,
+  "mae": 0.1986581345704792,
+  "rmse": 0.30309697617168735,
+  "overfit_gap": 0.07516873387778189,
+  "dataset_size": 48,
+  "physics_features": {
+    "fp3_baseline": 80.368,
+    "medium_deg_rate": -1.2586038961038966,
+    "hard_deg_rate": 0.06,
+    "race_track_temp": 49.31127819548872,
+    "race_air_temp": 33.1015037593985,
+    "fuel_effect_per_kg": 0.03
+  }
+}

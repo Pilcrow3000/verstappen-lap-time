@@ -1,0 +1,18 @@
+{
+  "year": 2022,
+  "final_model": "CatBoost",
+  "test_r2": 0.8518791451825427,
+  "train_r2": 0.9723731126681561,
+  "mae": 0.12628249119029972,
+  "rmse": 0.15455583003111387,
+  "overfit_gap": 0.12049396748561336,
+  "dataset_size": 43,
+  "physics_features": {
+    "fp3_baseline": 81.252,
+    "medium_deg_rate": -3.2589280719280693,
+    "hard_deg_rate": 0.06,
+    "race_track_temp": 43.138775510204084,
+    "race_air_temp": 27.73469387755102,
+    "fuel_effect_per_kg": 0.03
+  }
+}

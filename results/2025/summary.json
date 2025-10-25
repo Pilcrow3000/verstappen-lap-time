@@ -1,0 +1,18 @@
+{
+  "year": 2025,
+  "final_model": "RandomForest (Tuned)",
+  "test_r2": 0.9799556147242944,
+  "train_r2": 0.9165231763479413,
+  "mae": 0.08630360532801547,
+  "rmse": 0.11929804098999619,
+  "overfit_gap": -0.06343243837635304,
+  "dataset_size": 50,
+  "physics_features": {
+    "fp3_baseline": 79.498,
+    "medium_deg_rate": -2.065426470588235,
+    "hard_deg_rate": 0.06,
+    "race_track_temp": 43.28819444444444,
+    "race_air_temp": 26.76111111111111,
+    "fuel_effect_per_kg": 0.03
+  }
+}

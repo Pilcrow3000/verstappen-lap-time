@@ -1,0 +1,18 @@
+{
+  "year": 2023,
+  "final_model": "XGBoost (Tuned)",
+  "test_r2": 0.7854038464231756,
+  "train_r2": 0.9992875175929778,
+  "mae": 0.17079923095703292,
+  "rmse": 0.2275043783675568,
+  "overfit_gap": 0.21388367116980223,
+  "dataset_size": 48,
+  "physics_features": {
+    "fp3_baseline": 80.998,
+    "medium_deg_rate": -0.353294491525423,
+    "hard_deg_rate": 0.06,
+    "race_track_temp": 42.928205128205136,
+    "race_air_temp": 29.330128205128204,
+    "fuel_effect_per_kg": 0.03
+  }
+}

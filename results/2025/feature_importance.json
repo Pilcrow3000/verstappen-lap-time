@@ -1,0 +1,30 @@
+{
+  "features": [
+    "lap_number",
+    "lap_progress",
+    "tire_age",
+    "tire_age_squared",
+    "fuel_remaining_kg",
+    "fuel_consumed_kg",
+    "compound_HARD",
+    "fp3_baseline_pace",
+    "tire_deg_rate",
+    "track_temp",
+    "air_temp",
+    "stint_number"
+  ],
+  "importance": [
+    0.11914838030132593,
+    0.09358709669366848,
+    0.014695479748412526,
+    0.021771638905658,
+    0.2687731851714088,
+    0.12093469983118835,
+    0.11021500574668859,
+    0.0,
+    0.12062828765597597,
+    0.0,
+    0.0,
+    0.1302462259456734
+  ]
+}
