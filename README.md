@@ -16,12 +16,14 @@ Interactive dashboard with multi-year analysis, predictions, and model insights.
 
 | Year | Model | Test R² | MAE |
 |------|-------|---------|-----|
-| 2022 | CatBoost | 0.8519 | 0.126s |
-| 2023 | XGBoost (Tuned) | 0.7854 | 0.171s |
-| 2024 | CatBoost (Tuned) | 0.9230 | 0.199s |
-| 2025 | RandomForest (Tuned) | **0.9800** | **0.086s** |
+| 2022 | CatBoost | 0.8686 | 0.121s |
+| 2023 | GradientBoosting | 0.8649 | 0.144s |
+| 2024 | CatBoost (Tuned) | 0.9128 | 0.189s |
+| 2025 | Stacking Ensemble | **0.9797** | **0.101s** |
 
-**Average Accuracy:** 88.51% R² across 4 years | **189 total laps analyzed**
+- Average Accuracy: **90.65%** R² across 4 years  
+- Average MAE: **0.1388s**
+- Total laps analyzed: 189
 
 ## 🎯 Features
 

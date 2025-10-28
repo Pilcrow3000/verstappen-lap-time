@@ -1,11 +1,11 @@
 {
   "year": 2025,
-  "final_model": "RandomForest (Tuned)",
-  "test_r2": 0.9799556147242944,
-  "train_r2": 0.9165231763479413,
-  "mae": 0.08630360532801547,
-  "rmse": 0.11929804098999619,
-  "overfit_gap": -0.06343243837635304,
+  "final_model": "Stacking Ensemble",
+  "test_r2": 0.9796674816836859,
+  "train_r2": 0.9308550912407733,
+  "mae": 0.10081506479446253,
+  "rmse": 0.12031783042626469,
+  "overfit_gap": -0.048812390442912634,
   "dataset_size": 50,
   "physics_features": {
     "fp3_baseline": 79.498,
